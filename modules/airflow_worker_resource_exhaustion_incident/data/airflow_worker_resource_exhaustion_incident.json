@@ -1,0 +1,150 @@
+{
+  "name": "airflow_worker_resource_exhaustion_incident",
+  "description": "This incident type refers to situations where Apache Airflow workers have exhausted their resources. Apache Airflow is an open-source platform to programmatically author, schedule, and monitor workflows. Workers in Apache Airflow are responsible for executing tasks and are essential to the platform's functionality. Resource exhaustion in workers can cause a significant impact on the performance of the platform and can result in workflow failures. This incident type requires immediate attention to ensure the workers have sufficient resources to execute tasks, and the platform is functioning correctly.",
+  "params": [
+    {
+      "name": "AIRFLOW_LOG_FILE",
+      "value": ""
+    },
+    {
+      "name": "WORKER_PID",
+      "value": ""
+    },
+    {
+      "name": "WORKER_CONFIG_FILE",
+      "value": ""
+    },
+    {
+      "name": "DESIRED_NUMBER_OF_WORKERS",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Airflow worker resource exhaustion incident.\nThis incident type refers to situations where Apache Airflow workers have exhausted their resources. Apache Airflow is an open-source platform to programmatically author, schedule, and monitor workflows. Workers in Apache Airflow are responsible for executing tasks and are essential to the platform's functionality. Resource exhaustion in workers can cause a significant impact on the performance of the platform and can result in workflow failures. This incident type requires immediate attention to ensure the workers have sufficient resources to execute tasks, and the platform is functioning correctly."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the CPU usage of the affected worker node"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `top`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the disk usage of the affected worker node"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `df -h`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the memory usage of the affected worker node"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `free -m`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the currently running processes on the affected worker node"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `ps aux`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Identify any specific Airflow tasks that may be causing the resource exhaustion"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `grep \"airflow\" /var/log/syslog`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Airflow logs for any errors or warnings that may be related to the resource exhaustion"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -f /var/log/airflow/worker.log`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Restart the Airflow worker process on the affected node"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo systemctl restart airflow-worker.service`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The worker may not have been configured with enough resources to handle the workload it was given."
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_worker_diagnosis($AIRFLOW_LOG_FILE, $WORKER_PID, $WORKER_CONFIG_FILE)"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Scale up the number of airflow workers to ensure sufficient resources are available to handle the workload."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_worker_scaling($DESIRED_NUMBER_OF_WORKERS)"
+    }
+  ]
+}
